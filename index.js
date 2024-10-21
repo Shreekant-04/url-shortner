@@ -15,7 +15,7 @@ app.use(cors());
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 app.set("views", path.join(__dirname, "views"));
-app.set("views", "./views");
+app.set("view engine", "ejs"); 
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get("/", (req, res) => {
@@ -25,17 +25,16 @@ app.get("/", (req, res) => {
 
 app.post("/url", async (req, res) => {
   const { url } = req.body;
-  console.log(url);
   const path = new URL(req.url, `http://${req.headers.host}`);
-  console.log(path);
+  
   let data = await urlSchema.findOne({ LongUrl: url });
   if (data) {
     return res.status(200).json(data);
   }
 
-  let newEntry = await new urlSchema({ LongUrl: url });
-  newEntry.shortUrl = `${path.href}/${genShortUrl(url)}`;
-  newEntry.save();
+  let newEntry = new urlSchema({ LongUrl: url });
+  newEntry.shortUrl = `${path.href}/${genShortUrl(url)}`; // <-- Removed extra "/"
+  await newEntry.save();
   res.status(201).json(newEntry);
 });
 
@@ -46,9 +45,10 @@ app.get("/url/:shorturl", async (req, res) => {
     res.redirect(data.LongUrl);
     return;
   }
-  res.send("no data found");
+  res.render("notFound");
 });
 
+// Server start listening
 let PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`listening on port ${PORT}`);
