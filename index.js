@@ -20,6 +20,7 @@ app.use(express.static(path.join(__dirname, "public")));
 
 app.get("/", (req, res) => {
   res.set("Content-Type", "text/html");
+  console.log(req);
   res.render("index", { active: "result", LongUrl: "", shortUrl: "" });
 });
 
@@ -32,22 +33,20 @@ app.post("/url", async (req, res) => {
   }
 
   let newEntry = new urlSchema({ LongUrl: url });
-  newEntry.shortUrl = `${path.href}${genShortUrl(url)}`; // <-- Removed extra "/"
+  newEntry.shortUrl = `${path.href}${genShortUrl(url)}`; 
   await newEntry.save();
   res.status(201).json(newEntry);
 });
 
 app.get("/:shorturl", async (req, res) => {
-  const path = `https://${req.headers.host}${req.params.shorturl}`;
-  
-  console.log(path);
+  const path = `https://${req.headers.host}/${req.params.shorturl}`;
   const data = await urlSchema.findOne({ shortUrl: path });
-  console.log(data);
-  if (!data) {
-    res.render("notFound");
+  if (data) {
+    res.redirect(data.LongUrl);
+
     return;
   }
-  res.redirect(data.LongUrl);
+  res.render("notFound");
 });
 
 // Server start listening
