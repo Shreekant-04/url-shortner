@@ -6,7 +6,7 @@ const urlSchema = mongoose.Schema(
     shortUrl: { type: String, default: "" },
   },
   {
-    timestamp: true,
+    timestamps: true,
   }
 );
 
