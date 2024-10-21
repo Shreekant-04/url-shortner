@@ -124,10 +124,10 @@
 
             document.getElementById(
               "longUrl"
-            ).textContent = `Long URL: ${data.LongUrl}`;
+            ).textContent = `Long URL: ${data.original_url}`;
             document.getElementById(
               "shortUrl"
-            ).innerHTML = `Short URL:<a href=${data.shortUrl} target="_blank"> ${data.shortUrl}</a>`;
+            ).innerHTML = `Short URL:<a href=${data.short_url} target="_blank"> ${data.short_url}</a>`;
             document.querySelector(".result").style.display = "block";
             urlInput.value = "";
           } catch (error) {

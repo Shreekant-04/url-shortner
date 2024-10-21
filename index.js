@@ -18,34 +18,53 @@ app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "ejs");
 app.use(express.static(path.join(__dirname, "public")));
 
+const validateUrl = (urlString) => {
+  try {
+    const url = new URL(urlString);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch (err) {
+    return false;
+  }
+};
+
 app.get("/", (req, res) => {
   res.set("Content-Type", "text/html");
-  console.log(req);
   res.render("index", { active: "result", LongUrl: "", shortUrl: "" });
 });
 
 app.post("/api/shorturl", async (req, res) => {
   const { url } = req.body;
-  const path = new URL(req.url, `https://${req.headers.host}`);
-  console.log(path)
-  let data = await urlSchema.findOne({ LongUrl: url });
-  if (data) {
-    return res.status(200).json(data);
+
+  if (!validateUrl(url)) {
+    return res.json({ error: "invalid url" });
   }
 
-  let newEntry = new urlSchema({ LongUrl: url });
-  newEntry.shortUrl = `${path.href}/${genShortUrl(url)}`;
+  let data = await urlSchema.findOne({ LongUrl: url });
+  if (data) {
+    return res
+      .status(200)
+      .json({ original_url: data.LongUrl, short_url: data.shortUrl });
+  }
+
+  const shortUrl = genShortUrl(url);
+  let newEntry = new urlSchema({ LongUrl: url, shortUrl });
+
+  newEntry.shortUrl = `https://${req.headers.host}/api/shorturl/${shortUrl}`;
   await newEntry.save();
-  res.status(201).json(newEntry);
+
+  res
+    .status(201)
+    .json({ original_url: newEntry.LongUrl, short_url: newEntry.shortUrl });
 });
 
 app.get("/api/shorturl/:shorturl", async (req, res) => {
-  const path = `https://${req.headers.host}${req.url}`;
-  const data = await urlSchema.findOne({ shortUrl: path });
+  const shortUrl = `https://${req.headers.host}/api/shorturl/${req.params.shorturl}`;
+
+  const data = await urlSchema.findOne({ shortUrl });
   if (data) {
-    res.redirect(data.LongUrl);
-    return;
+    return res.redirect(data.LongUrl);
   }
+
   res.set("Content-Type", "text/html");
   res.render("notFound");
 });
