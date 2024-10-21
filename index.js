@@ -26,30 +26,30 @@ app.get("/", (req, res) => {
 
 app.post("/url", async (req, res) => {
   const { url } = req.body;
-  const path = new URL("", `https://${req.headers.host}`);
+  const path = new URL("api", `https://${req.headers.host}`);
   let data = await urlSchema.findOne({ LongUrl: url });
   if (data) {
     return res.status(200).json(data);
   }
 
   let newEntry = new urlSchema({ LongUrl: url });
-  newEntry.shortUrl = `${path.href}${genShortUrl(url)}`; 
+  newEntry.shortUrl = `${path.href}/${genShortUrl(url)}`;
   await newEntry.save();
   res.status(201).json(newEntry);
 });
 
-app.get("/:shorturl", async (req, res) => {
-  const path = `https://${req.headers.host}/${req.params.shorturl}`;
+app.get("/api/:shorturl", async (req, res) => {
+  const path = `https://${req.headers.host}/${req.url}`;
+  console.log(path);
   const data = await urlSchema.findOne({ shortUrl: path });
   if (data) {
     res.redirect(data.LongUrl);
-
     return;
   }
+  res.set("Content-Type", "text/html");
   res.render("notFound");
 });
 
-// Server start listening
 let PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`listening on port ${PORT}`);
