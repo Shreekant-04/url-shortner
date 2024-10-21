@@ -26,21 +26,20 @@ app.get("/", (req, res) => {
 
 app.post("/url", async (req, res) => {
   const { url } = req.body;
-  const path = new URL("api", `https://${req.headers.host}`);
+  const path = new URL("/api/shorturl/", `https://${req.headers.host}`);
   let data = await urlSchema.findOne({ LongUrl: url });
   if (data) {
     return res.status(200).json(data);
   }
 
   let newEntry = new urlSchema({ LongUrl: url });
-  newEntry.shortUrl = `${path.href}/${genShortUrl(url)}`;
+  newEntry.shortUrl = `${path.href}${genShortUrl(url)}`;
   await newEntry.save();
   res.status(201).json(newEntry);
 });
 
-app.get("/api/:shorturl", async (req, res) => {
-  const path = `https://${req.headers.host}/${req.url}`;
-  console.log(path);
+app.get("/api/shorturl/:shorturl", async (req, res) => {
+  const path = `https://${req.headers.host}${req.url}`;
   const data = await urlSchema.findOne({ shortUrl: path });
   if (data) {
     res.redirect(data.LongUrl);
