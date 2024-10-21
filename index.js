@@ -24,16 +24,17 @@ app.get("/", (req, res) => {
   res.render("index", { active: "result", LongUrl: "", shortUrl: "" });
 });
 
-app.post("/url", async (req, res) => {
+app.post("/api/shorturl", async (req, res) => {
   const { url } = req.body;
-  const path = new URL("/api/shorturl/", `https://${req.headers.host}`);
+  const path = new URL(req.url, `https://${req.headers.host}`);
+  console.log(path)
   let data = await urlSchema.findOne({ LongUrl: url });
   if (data) {
     return res.status(200).json(data);
   }
 
   let newEntry = new urlSchema({ LongUrl: url });
-  newEntry.shortUrl = `${path.href}${genShortUrl(url)}`;
+  newEntry.shortUrl = `${path.href}/${genShortUrl(url)}`;
   await newEntry.save();
   res.status(201).json(newEntry);
 });
