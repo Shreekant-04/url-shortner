@@ -25,7 +25,7 @@ app.get("/", (req, res) => {
 
 app.post("/url", async (req, res) => {
   const { url } = req.body;
-  const path = new URL(req.url, `http://${req.headers.host}`);
+  const path = new URL(req.url, `https://${req.headers.host}`);
   
   let data = await urlSchema.findOne({ LongUrl: url });
   if (data) {
