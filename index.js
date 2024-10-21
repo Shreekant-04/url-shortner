@@ -15,8 +15,8 @@ app.use(cors());
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 app.set("views", path.join(__dirname, "views"));
-app.set("view engine", "ejs"); 
-app.use(express.static(path.join(__dirname, 'public')));
+app.set("view engine", "ejs");
+app.use(express.static(path.join(__dirname, "public")));
 
 app.get("/", (req, res) => {
   res.set("Content-Type", "text/html");
@@ -25,27 +25,29 @@ app.get("/", (req, res) => {
 
 app.post("/url", async (req, res) => {
   const { url } = req.body;
-  const path = new URL(req.url, `https://${req.headers.host}`);
-  
+  const path = new URL("", `https://${req.headers.host}`);
   let data = await urlSchema.findOne({ LongUrl: url });
   if (data) {
     return res.status(200).json(data);
   }
 
   let newEntry = new urlSchema({ LongUrl: url });
-  newEntry.shortUrl = `${path.href}/${genShortUrl(url)}`; // <-- Removed extra "/"
+  newEntry.shortUrl = `${path.href}${genShortUrl(url)}`; // <-- Removed extra "/"
   await newEntry.save();
   res.status(201).json(newEntry);
 });
 
-app.get("/url/:shorturl", async (req, res) => {
-  const path = `http://${req.headers.host}${req.url}`;
+app.get("/:shorturl", async (req, res) => {
+  const path = `https://${req.headers.host}${req.params.shorturl}`;
+  
+  console.log(path);
   const data = await urlSchema.findOne({ shortUrl: path });
-  if (data) {
-    res.redirect(data.LongUrl);
+  console.log(data);
+  if (!data) {
+    res.render("notFound");
     return;
   }
-  res.render("notFound");
+  res.redirect(data.LongUrl);
 });
 
 // Server start listening
